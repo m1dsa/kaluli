@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多食物卡路里计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        input, button, select {
+            padding: 10px;
+            margin: 5px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #food-list {
+            margin-top: 20px;
+        }
+        #food-list li {
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>多食物卡路里计算器</h1>
+        
+        <h2>计算食物卡路里</h2>
+        <select id="food-select">
+            <option value="">选择食物</option>
+            <option value="135">米饭（熟）</option>
+            <option value="165">鸡胸肉（煮熟）</option>
+            <option value="52">苹果（带皮）</option>
+            <option value="247">全麦面包</option>
+            <option value="35">西兰花（煮熟）</option>
+            <option value="89">香蕉</option>
+            <option value="30">西瓜</option>
+            <option value="250">饺子（煮熟）</option>
+            <option value="250">牛肉（熟）</option>
+            <option value="155">鸡蛋（全蛋）</option>
+            <option value="99">虾（煮熟）</option>
+        </select>
+        <input type="number" id="food-quantity" placeholder="输入食物重量(克)">
+        <button onclick="calculateAndAddFood()">计算卡路里</button>
+        <button onclick="addCustomFood()">添加自定义食物</button>
+
+        <h2>已添加的食物</h2>
+        <ul id="food-list"></ul>
+        <p>总卡路里: <span id="total-calories">0</span> 大卡</p>
+
+        <h2>常见食物卡路里表（每100克）</h2>
+        <table>
+            <tr>
+                <th>食物</th>
+                <th>卡路里（每100克）</th>
+            </tr>
+            <tr><td>米饭（熟）</td><td>135大卡</td></tr>
+            <tr><td>鸡胸肉（煮熟）</td><td>165大卡</td></tr>
+            <tr><td>苹果（带皮）</td><td>52大卡</td></tr>
+            <tr><td>全麦面包</td><td>247大卡</td></tr>
+            <tr><td>西兰花（煮熟）</td><td>35大卡</td></tr>
+            <tr><td>香蕉</td><td>89大卡</td></tr>
+            <tr><td>西瓜</td><td>30大卡</td></tr>
+            <tr><td>饺子（煮熟）</td><td>250大卡</td></tr>
+            <tr><td>牛肉（熟）</td><td>250大卡</td></tr>
+            <tr><td>鸡蛋（全蛋）</td><td>155大卡</td></tr>
+            <tr><td>虾（煮熟）</td><td>99大卡</td></tr>
+        </table>
+    </div>
+
+    <script>
+        let totalCalories = 0;
+        const foodList = document.getElementById('food-list');
+        const totalCaloriesSpan = document.getElementById('total-calories');
+
+        function calculateAndAddFood() {
+            const foodSelect = document.getElementById('food-select');
+            const foodQuantity = document.getElementById('food-quantity');
+            
+            if (foodSelect.value && foodQuantity.value) {
+                const calories = (parseFloat(foodSelect.value) * parseFloat(foodQuantity.value)) / 100;
+                const foodName = foodSelect.options[foodSelect.selectedIndex].text;
+                
+                addFoodToList(foodName, foodQuantity.value, calories);
+                updateTotalCalories(calories);
+                
+                foodQuantity.value = '';
+            } else {
+                alert('请选择食物并输入重量');
+            }
+        }
+
+        function addCustomFood() {
+            const customCalories = prompt('请输入每100克的卡路里:');
+            const customQuantity = prompt('请输入食物重量(克):');
+            const customName = prompt('请输入食物名称:');
+            
+            if (customCalories && customQuantity && customName) {
+                const calories = (parseFloat(customCalories) * parseFloat(customQuantity)) / 100;
+                addFoodToList(customName, customQuantity, calories);
+                updateTotalCalories(calories);
+            }
+        }
+
+        function addFoodToList(name, quantity, calories) {
+            const li = document.createElement('li');
+            li.textContent = `${name} (${quantity}克): ${calories.toFixed(2)}大卡 `;
+            
+            const removeButton = document.createElement('button');
+            removeButton.textContent = '删除';
+            removeButton.onclick = function() {
+                foodList.removeChild(li);
+                updateTotalCalories(-calories);
+            };
+            
+            li.appendChild(removeButton);
+            foodList.appendChild(li);
+        }
+
+        function updateTotalCalories(calories) {
+            totalCalories += calories;
+            totalCaloriesSpan.textContent = totalCalories.toFixed(2);
+        }
+    </script>
+</body>
+</html>
