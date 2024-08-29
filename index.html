@@ -3,38 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多食物卡路里计算器</title>
+    <title>增强版卡路里计算器</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            margin: 0;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
-            background-color: #f4f4f4;
         }
         .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
+            background-color: #f4f4f4;
             padding: 20px;
             border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h1, h2 {
-            color: #333;
+        h1, h2, h3 {
+            color: #2c3e50;
         }
-        input, button, select {
-            padding: 10px;
-            margin: 5px 0;
+        input, select, button {
+            margin: 10px 0;
+            padding: 5px;
+            width: 100%;
         }
         button {
-            background-color: #4CAF50;
+            background-color: #3498db;
             color: white;
             border: none;
             cursor: pointer;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #2980b9;
+        }
+        .info {
+            background-color: #e8f4f8;
+            padding: 10px;
+            border-left: 5px solid #3498db;
+            margin-bottom: 20px;
         }
         table {
             width: 100%;
@@ -47,64 +52,69 @@
             text-align: left;
         }
         th {
-            background-color: #4CAF50;
+            background-color: #3498db;
             color: white;
         }
-        #food-list {
-            margin-top: 20px;
-        }
-        #food-list li {
-            background-color: #f1f1f1;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>多食物卡路里计算器</h1>
+        <h1>增强版卡路里计算器</h1>
         
-        <h2>计算食物卡路里</h2>
-        <select id="food-select">
-            <option value="">选择食物</option>
-            <option value="135">米饭（熟）</option>
-            <option value="165">鸡胸肉（煮熟）</option>
-            <option value="52">苹果（带皮）</option>
-            <option value="247">全麦面包</option>
-            <option value="35">西兰花（煮熟）</option>
-            <option value="89">香蕉</option>
-            <option value="30">西瓜</option>
-            <option value="250">饺子（煮熟）</option>
-            <option value="250">牛肉（熟）</option>
-            <option value="155">鸡蛋（全蛋）</option>
-            <option value="99">虾（煮熟）</option>
+        <h2>每日卡路里摄入建议</h2>
+        <div class="info">
+            <p>这里计算的是您维持当前体重所需的每日卡路里摄入量。这个量可以保持您的体重稳定，维持身体正常机能。</p>
+            <p>如果您的目标是减肥，每日摄入卡路里量应在维持体重所需的80-85%之间。系统会根据计算结果给出减肥建议。</p>
+            <p>提示：每当您的体重减少约0.5公斤（1斤）时，您可以减少25-50卡路里的每日摄入量。</p>
+        </div>
+        <input type="number" id="weight" placeholder="输入体重(kg)">
+        <input type="number" id="height" placeholder="输入身高(cm)">
+        <input type="number" id="age" placeholder="输入年龄">
+        <select id="gender">
+            <option value="male">男性</option>
+            <option value="female">女性</option>
         </select>
-        <input type="number" id="food-quantity" placeholder="输入食物重量(克)">
-        <button onclick="calculateAndAddFood()">计算卡路里</button>
-        <button onclick="addCustomFood()">添加自定义食物</button>
+        <select id="activity-level">
+            <option value="1.2">久坐不动</option>
+            <option value="1.375">轻度活动</option>
+            <option value="1.55">中度活动</option>
+            <option value="1.725">高度活动</option>
+            <option value="1.9">非常活跃</option>
+        </select>
+        <button onclick="calculateDailyCalories()">计算每日卡路里摄入量</button>
+        <p>维持体重所需的每日卡路里摄入量: <span id="maintenance-calories"></span> 大卡</p>
+        <p>减肥建议的每日卡路里摄入范围: <span id="weight-loss-calories-range"></span> 大卡</p>
+        
+        <h2>目标体重计算器</h2>
+        <input type="number" id="target-weight" placeholder="输入目标体重(kg)">
+        <button onclick="calculateWeightLossGoal()">计算目标体重计划</button>
+        <p>达到目标体重所需时间: <span id="time-to-goal"></span></p>
+        <p>推荐的每日卡路里摄入量: <span id="goal-calories"></span> 大卡</p>
 
-        <h2>已添加的食物</h2>
+        <h2>食物热量计算器</h2>
+        <select id="food-select"></select>
+        <input type="number" id="food-amount" placeholder="输入食物重量(克)">
+        <button onclick="addFood()">添加食物</button>
+        
+        <h3>添加或修改食物</h3>
+        <input type="text" id="new-food-name" placeholder="输入食物名称">
+        <input type="number" id="new-food-calories" placeholder="输入每100克的卡路里">
+        <button onclick="addOrUpdateFood()">添加或修改食物</button>
+        
+        <p>已添加的食物:</p>
         <ul id="food-list"></ul>
         <p>总卡路里: <span id="total-calories">0</span> 大卡</p>
 
-        <h2>常见食物卡路里表（每100克）</h2>
-        <table>
+        <h2>常见食物热量表（每100克）</h2>
+        <table id="food-table">
             <tr>
                 <th>食物</th>
-                <th>卡路里（每100克）</th>
+                <th>卡路里（大卡）</th>
+                <th>操作</th>
             </tr>
-            <tr><td>米饭（熟）</td><td>135大卡</td></tr>
-            <tr><td>鸡胸肉（煮熟）</td><td>165大卡</td></tr>
-            <tr><td>苹果（带皮）</td><td>52大卡</td></tr>
-            <tr><td>全麦面包</td><td>247大卡</td></tr>
-            <tr><td>西兰花（煮熟）</td><td>35大卡</td></tr>
-            <tr><td>香蕉</td><td>89大卡</td></tr>
-            <tr><td>西瓜</td><td>30大卡</td></tr>
-            <tr><td>饺子（煮熟）</td><td>250大卡</td></tr>
-            <tr><td>牛肉（熟）</td><td>250大卡</td></tr>
-            <tr><td>鸡蛋（全蛋）</td><td>155大卡</td></tr>
-            <tr><td>虾（煮熟）</td><td>99大卡</td></tr>
         </table>
     </div>
 
@@ -113,54 +123,183 @@
         const foodList = document.getElementById('food-list');
         const totalCaloriesSpan = document.getElementById('total-calories');
 
-        function calculateAndAddFood() {
+        const foodCalories = {
+            // 主食
+            "米饭": 116,
+            "馒头": 223,
+            "面条": 108,
+            "全麦面包": 247,
+
+            // 肉类
+            "鸡胸肉": 165,
+            "猪瘦肉": 143,
+            "牛肉": 106,
+            "鱼肉": 100,
+
+            // 蔬菜
+            "西兰花": 34,
+            "胡萝卜": 41,
+            "西红柿": 18,
+            "黄瓜": 16,
+
+            // 水果
+            "苹果": 52,
+            "香蕉": 89,
+            "橙子": 47,
+            "草莓": 32,
+
+            // 零食
+            "薯片": 536,
+            "巧克力": 546,
+            "爆米花": 387,
+            "花生": 567,
+
+            // 饮料
+            "可乐": 42,
+            "橙汁": 45,
+            "全脂牛奶": 64,
+            "啤酒": 43
+        };
+
+        function initializeFoodSelect() {
             const foodSelect = document.getElementById('food-select');
-            const foodQuantity = document.getElementById('food-quantity');
-            
-            if (foodSelect.value && foodQuantity.value) {
-                const calories = (parseFloat(foodSelect.value) * parseFloat(foodQuantity.value)) / 100;
-                const foodName = foodSelect.options[foodSelect.selectedIndex].text;
-                
-                addFoodToList(foodName, foodQuantity.value, calories);
-                updateTotalCalories(calories);
-                
-                foodQuantity.value = '';
+            foodSelect.innerHTML = '<option value="">选择食物</option>';
+            for (const food in foodCalories) {
+                const option = document.createElement('option');
+                option.value = food;
+                option.textContent = food;
+                foodSelect.appendChild(option);
+            }
+        }
+
+        function initializeFoodTable() {
+            const foodTable = document.getElementById('food-table');
+            foodTable.innerHTML = '<tr><th>食物</th><th>卡路里（大卡）</th><th>操作</th></tr>';
+            for (const food in foodCalories) {
+                const row = foodTable.insertRow();
+                const foodCell = row.insertCell(0);
+                const calorieCell = row.insertCell(1);
+                const actionCell = row.insertCell(2);
+                foodCell.textContent = food;
+                calorieCell.textContent = foodCalories[food];
+                actionCell.innerHTML = `<button onclick="editFood('${food}')">修改</button>`;
+            }
+        }
+
+        function calculateDailyCalories() {
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const age = parseInt(document.getElementById('age').value);
+            const gender = document.getElementById('gender').value;
+            const activityLevel = parseFloat(document.getElementById('activity-level').value);
+
+            if (weight && height && age && gender && activityLevel) {
+                let bmr;
+                if (gender === 'male') {
+                    bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+                } else {
+                    bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+                }
+                const maintenanceCalories = Math.round(bmr * activityLevel);
+                const weightLossCaloriesLow = Math.round(maintenanceCalories * 0.80);
+                const weightLossCaloriesHigh = Math.round(maintenanceCalories * 0.85);
+
+                document.getElementById('maintenance-calories').textContent = maintenanceCalories;
+                document.getElementById('weight-loss-calories-range').textContent = `${weightLossCaloriesLow} - ${weightLossCaloriesHigh}`;
+            } else {
+                alert('请填写所有必要的信息');
+            }
+        }
+
+        function calculateWeightLossGoal() {
+            const currentWeight = parseFloat(document.getElementById('weight').value);
+            const targetWeight = parseFloat(document.getElementById('target-weight').value);
+            const maintenanceCalories = parseInt(document.getElementById('maintenance-calories').textContent);
+
+            if (currentWeight && targetWeight && maintenanceCalories) {
+                const weightToLose = currentWeight - targetWeight;
+                const caloriesPerJin = 3900; // 1斤 ≈ 3900 卡路里
+                const totalCaloriesToBurn = weightToLose * 2 * caloriesPerJin; // 将公斤转换为斤
+
+                // 假设每天减少总消耗的15-20%卡路里
+                const dailyDeficitLow = maintenanceCalories * 0.15;
+                const dailyDeficitHigh = maintenanceCalories * 0.20;
+
+                const daysToGoalLow = Math.ceil(totalCaloriesToBurn / dailyDeficitHigh);
+                const daysToGoalHigh = Math.ceil(totalCaloriesToBurn / dailyDeficitLow);
+
+                const goalCaloriesLow = Math.round(maintenanceCalories - dailyDeficitHigh);
+                const goalCaloriesHigh = Math.round(maintenanceCalories - dailyDeficitLow);
+
+                document.getElementById('time-to-goal').textContent = `约${daysToGoalLow}到${daysToGoalHigh}天`;
+                document.getElementById('goal-calories').textContent = `${goalCaloriesLow} - ${goalCaloriesHigh}`;
+            } else {
+                alert('请先计算每日卡路里摄入量，并输入目标体重');
+            }
+        }
+
+        function addFood() {
+            const foodSelect = document.getElementById('food-select');
+            const foodAmount = document.getElementById('food-amount');
+            const selectedFood = foodSelect.value;
+            const amount = parseFloat(foodAmount.value);
+
+            if (selectedFood && amount) {
+                const calories = Math.round((foodCalories[selectedFood] / 100) * amount);
+                totalCalories += calories;
+
+                const listItem = document.createElement('li');
+                listItem.textContent = `${selectedFood} (${amount}g): ${calories} 大卡`;
+                foodList.appendChild(listItem);
+
+                totalCaloriesSpan.textContent = totalCalories;
+                foodAmount.value = '';
             } else {
                 alert('请选择食物并输入重量');
             }
         }
 
-        function addCustomFood() {
-            const customCalories = prompt('请输入每100克的卡路里:');
-            const customQuantity = prompt('请输入食物重量(克):');
-            const customName = prompt('请输入食物名称:');
-            
-            if (customCalories && customQuantity && customName) {
-                const calories = (parseFloat(customCalories) * parseFloat(customQuantity)) / 100;
-                addFoodToList(customName, customQuantity, calories);
-                updateTotalCalories(calories);
+        function addOrUpdateFood() {
+            const newFoodName = document.getElementById('new-food-name').value;
+            const newFoodCalories = parseFloat(document.getElementById('new-food-calories').value);
+
+            if (newFoodName && newFoodCalories) {
+                if (foodCalories[newFoodName]) {
+                    if (confirm(`食物 "${newFoodName}" 已存在。是否要更新其热量值？`)) {
+                        foodCalories[newFoodName] = newFoodCalories;
+                        alert(`已更新食物: ${newFoodName}`);
+                    }
+                } else {
+                    foodCalories[newFoodName] = newFoodCalories;
+                    alert(`已添加新食物: ${newFoodName}`);
+                }
+                initializeFoodSelect();
+                initializeFoodTable();
+                document.getElementById('new-food-name').value = '';
+                document.getElementById('new-food-calories').value = '';
+            } else {
+                alert('请输入食物名称和热量');
             }
         }
 
-        function addFoodToList(name, quantity, calories) {
-            const li = document.createElement('li');
-            li.textContent = `${name} (${quantity}克): ${calories.toFixed(2)}大卡 `;
-            
-            const removeButton = document.createElement('button');
-            removeButton.textContent = '删除';
-            removeButton.onclick = function() {
-                foodList.removeChild(li);
-                updateTotalCalories(-calories);
-            };
-            
-            li.appendChild(removeButton);
-            foodList.appendChild(li);
+        function editFood(food) {
+            const newCalories = prompt(`请输入 "${food}" 的新热量值（每100克）:`, foodCalories[food]);
+            if (newCalories !== null) {
+                const calories = parseFloat(newCalories);
+                if (!isNaN(calories)) {
+                    foodCalories[food] = calories;
+                    initializeFoodSelect();
+                    initializeFoodTable();
+                    alert(`已更新 "${food}" 的热量值。`);
+                } else {
+                    alert('请输入有效的数字。');
+                }
+            }
         }
 
-        function updateTotalCalories(calories) {
-            totalCalories += calories;
-            totalCaloriesSpan.textContent = totalCalories.toFixed(2);
-        }
+        // 初始化食物选择和食物热量表
+        initializeFoodSelect();
+        initializeFoodTable();
     </script>
 </body>
 </html>
