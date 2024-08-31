@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>增强版卡路里计算器</title>
+    <title>卡路里计算器</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -62,13 +62,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>增强版卡路里计算器</h1>
+        <h1>卡路里计算器</h1>
         
-        <h2>每日卡路里摄入建议</h2>
+        <h2>每日所需摄入量</h2>
         <div class="info">
-            <p>这里计算的是您维持当前体重所需的每日卡路里摄入量。这个量可以保持您的体重稳定，维持身体正常机能。</p>
-            <p>如果您的目标是减肥，每日摄入卡路里量应在维持体重所需的80-85%之间。系统会根据计算结果给出减肥建议。</p>
-            <p>提示：每当您的体重减少约0.5公斤（1斤）时，您可以减少25-50卡路里的每日摄入量。</p>
+            <p>1.这里计算维持当前体重所需卡路里。</p>
+            <p>2.减肥=每日摄入量<维持体重所需量，禁止过少摄入，否则影响身心健康，最好在80-85%之间。系统自动给出减肥建议。</p>
+            <p>3.体重每减少0.5公斤（1斤），可每天减少25-50卡路里的摄入。
+            </p>
+            <p>4.减肥是一个长期过程，宁可每天少吃一点点，坚持一个月，也不要三天不吃饭，最后体重反弹。
         </div>
         <input type="number" id="weight" placeholder="输入体重(kg)">
         <input type="number" id="height" placeholder="输入身高(cm)">
@@ -84,17 +86,25 @@
             <option value="1.725">高度活动</option>
             <option value="1.9">非常活跃</option>
         </select>
-        <button onclick="calculateDailyCalories()">计算每日卡路里摄入量</button>
-        <p>维持体重所需的每日卡路里摄入量: <span id="maintenance-calories"></span> 大卡</p>
-        <p>减肥建议的每日卡路里摄入范围: <span id="weight-loss-calories-range"></span> 大卡</p>
+         <div class="tooltip">
+            <span class="tooltiptext">
+                <strong>久坐不动（1.2）：</strong>长时间坐着工作，每天步数少于5000步。例如：办公室职员、长途卡车司机。<br>
+                <strong>轻度活动（1.375）：</strong>每天步数5000-7499步。如：教师、导游。<br>
+                <strong>中度活动（1.55）：</strong>经常每天步数7500-9999步。如：大学生。<br>
+                <strong>高度活动（1.725）：</strong>大部分时间站立或走动，每天步数10000-12499步。例如：服务生、健身者。<br>
+                <strong>非常活跃（1.9）：</strong>体力劳动或高强度训练，每天步数超过12500步。例如：建筑工人、农民、专业运动员。
+            </span>
+        <button onclick="calculateDailyCalories()">计算每日摄入量</button>
+        <p>维持体重所需量: <span id="maintenance-calories"></span> 大卡</p>
+        <p>减肥建议每日摄入: <span id="weight-loss-calories-range"></span> 大卡</p>
         
-        <h2>目标体重计算器</h2>
+        <h2>目标体重计划</h2>
         <input type="number" id="target-weight" placeholder="输入目标体重(kg)">
         <button onclick="calculateWeightLossGoal()">计算目标体重计划</button>
-        <p>达到目标体重所需时间: <span id="time-to-goal"></span></p>
-        <p>推荐的每日卡路里摄入量: <span id="goal-calories"></span> 大卡</p>
+        <p>所需时间: <span id="time-to-goal"></span></p>
+        <p>推荐每日摄入: <span id="goal-calories"></span> 大卡</p>
 
-        <h2>食物热量计算器</h2>
+        <h2>食物热量计算</h2>
         <select id="food-select"></select>
         <input type="number" id="food-amount" placeholder="输入食物重量(克)">
         <button onclick="addFood()">添加食物</button>
