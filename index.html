@@ -7,57 +7,111 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
+            line-height: 1.3;
             color: #333;
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
         }
         .container {
-            background-color: #f4f4f4;
+            background-color: #ffffff;
             padding: 20px;
-            border-radius: 5px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
         h1, h2, h3 {
-            color: #2c3e50;
+            color: #2e7d32;
+            margin-bottom: 6px;
         }
         input, select, button {
             margin: 10px 0;
-            padding: 5px;
+            padding: 10px;
             width: 100%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
         }
         button {
-            background-color: #3498db;
+            background-color: #4caf50;
             color: white;
             border: none;
             cursor: pointer;
+            font-size: 16px;
         }
         button:hover {
-            background-color: #2980b9;
+            background-color: #388e3c;
         }
         .info {
-            background-color: #e8f4f8;
+            background-color: #dcedc8;
             padding: 10px;
-            border-left: 5px solid #3498db;
+            border-left: 5px solid #4caf50;
             margin-bottom: 20px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 5px;
+            font-size: 14px;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+            border: 1px solid #ccc;
+            padding: 6px;
+            text-align: center;
         }
         th {
-            background-color: #3498db;
+            background-color: #4caf50;
             color: white;
         }
         tr:nth-child(even) {
-            background-color: #f2f2f2;
+            background-color: #f1f8e9;
         }
+        /* Info 区域整体样式 */
+       .info-container {
+       border: 1px solid #c8e6c9;
+       border-radius: 5px;
+       margin-bottom: 20px;
+       background-color: #f1f8e9;
+       overflow: hidden;
+}
+/* Info 标题和折叠按钮样式 */
+      .info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: #fff;
+      cursor: pointer;
+}
+/* 折叠按钮样式 */
+      .toggle-button {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      transform: rotate(0deg);
+      transition: transform 0.3s ease;
+      cursor: pointer;
+}
+
+/* 折叠内容样式 */
+      .info-content {
+      padding: 20px;
+      line-height: 1.6;
+      color: #333;
+}
+
+/* 折叠内容隐藏时的样式 */
+     .info-container.collapsed .info-content {
+      display: none;
+}
+
+/* 折叠按钮旋转效果 */
+      .info-container.collapsed .toggle-button {
+      transform: rotate(180deg);
+}
     </style>
 </head>
 <body>
@@ -65,7 +119,13 @@
         <h1>卡路里计算器</h1>
         
         <h2>每日所需摄入量</h2>
-        <div class="info">
+        <div class="info-container">
+        <div class="info-header">
+        <button class="toggle-button" onclick="toggleInfo()">
+            &#9650;
+             </button>
+    </div>
+    <div class="info-content" id="info-content">
             <p>1.这里计算维持当前体重所需卡路里。</p>
             <p>2.减肥=每日摄入量<维持体重所需量，禁止过少摄入，否则影响身心健康，最好在80-85%之间。系统自动给出减肥建议。</p>
             <p>3.体重每减少0.5公斤（1斤），可每天减少25-50卡路里的摄入。
@@ -104,19 +164,19 @@
         <p>所需时间: <span id="time-to-goal"></span></p>
         <p>推荐每日摄入: <span id="goal-calories"></span> 大卡</p>
 
-        <h2>食物热量计算</h2>
+        <h2>每日热量计算（可多次添加）</h2>
         <select id="food-select"></select>
         <input type="number" id="food-amount" placeholder="输入食物重量(克)">
         <button onclick="addFood()">添加食物</button>
         
+        <p>已添加的食物:</p>
+        <ul id="food-list"></ul>
+        <p>总卡路里: <span id="total-calories">0</span> 大卡</p>
+
         <h3>添加或修改食物</h3>
         <input type="text" id="new-food-name" placeholder="输入食物名称">
         <input type="number" id="new-food-calories" placeholder="输入每100克的卡路里">
         <button onclick="addOrUpdateFood()">添加或修改食物</button>
-        
-        <p>已添加的食物:</p>
-        <ul id="food-list"></ul>
-        <p>总卡路里: <span id="total-calories">0</span> 大卡</p>
 
         <h2>常见食物热量表（每100克）</h2>
         <table id="food-table">
@@ -306,6 +366,11 @@
                 }
             }
         }
+
+        function toggleInfo() {
+       const infoContainer = document.querySelector('.info-container');
+       infoContainer.classList.toggle('collapsed');
+}
 
         // 初始化食物选择和食物热量表
         initializeFoodSelect();
