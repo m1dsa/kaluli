@@ -1,22 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>travelmap</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <meta name="description" content="一个互动式旅行地图,让用户可以标记他们去过或想去的地方。">
+    <meta name="keywords" content="旅行地图,互动地图,旅行计划,地理标记">
+    <title>旅行足迹</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
     <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
         #map {
             height: 100vh;
             width: 100%;
         }
+        h1 {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1.5em;
+        }
     </style>
 </head>
 <body>
-    <div id="map"></div>
+    <h1>旅行足迹</h1>
+    <main id="map" aria-label="互动式旅行地图"></main>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+        // JavaScript代码保持不变
         // 初始化地图并设置默认视图
         var map = L.map('map').setView([20, 0], 2);  // 初始位置设为全球视图
 
