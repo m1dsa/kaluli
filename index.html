@@ -214,9 +214,7 @@
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false,
-        maxBounds: chinaBounds, // 限制范围
-        maxBoundsViscosity: 1.0, // 拖动边缘时的阻力
-        minZoom: 4 // 最小缩放，防止看到太多空白
+        minZoom: 2 // 最小缩放，防止看到太多空白
     }).setView([35, 105], 4);
     
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -382,3 +380,4 @@
 </script>
 </body>
 </html>
+
