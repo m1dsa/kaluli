@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 增加了 viewport-fit=cover 适配刘海屏 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>旅行足迹 - 莫兰蒂蓝版</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -14,20 +15,13 @@
 <style>
     /* --- 1. 莫兰蒂蓝配色方案 (Morandi Blue Palette) --- */
     :root {
-        /* 背景色：极淡的冷灰白，比暖白更适合蓝色系 */
         --bg-color: #F4F6F8;
-        
-        /* 核心莫兰蒂蓝 */
-        --c-blue: #889EAF;      /* 雾霾蓝 (主色调：图标、按钮) */
-        --c-blue-dark: #5E7382; /* 深岩蓝 (标题、重点文字) */
-        --c-grey: #DEE2E6;      /* 浅冷灰 (装饰、边框) */
-        --c-dusty-pink: #D6BCC0;/* 枯粉色 (保留作为删除/强调色，红蓝搭配很好看) */
-        
-        /* 文字颜色 */
-        --text-main: #4F5D66;   /* 深蓝灰 */
-        --text-sub: #949EA3;    /* 浅灰 */
-        
-        /* 阴影 - 带一点蓝色的阴影 */
+        --c-blue: #889EAF;      
+        --c-blue-dark: #5E7382; 
+        --c-grey: #DEE2E6;      
+        --c-dusty-pink: #D6BCC0;
+        --text-main: #4F5D66;   
+        --text-sub: #949EA3;    
         --shadow-soft: 0 5px 25px rgba(94, 115, 130, 0.12);
         --radius: 12px;
     }
@@ -39,6 +33,8 @@
         height: 100vh; overflow: hidden; 
         color: var(--text-main);
         background: var(--bg-color);
+        /* 禁止 iOS 橡皮筋回弹效果 */
+        overscroll-behavior: none; 
     }
 
     /* 地图全屏 */
@@ -61,14 +57,13 @@
         background: var(--c-blue); 
         color: #FFF; 
         border-color: var(--c-blue); 
-        transform: rotate(90deg); /* 增加一点微交互 */
+        transform: rotate(90deg); 
     }
 
     /* --- 3. 侧边栏 (冷调磨砂) --- */
     #sidebar {
         position: absolute; top: 0; left: 0; 
         width: 400px; height: 100%;
-        /* 背景改为带冷调的半透明白 */
         background: rgba(248, 250, 251, 0.96); 
         backdrop-filter: blur(12px);
         box-shadow: 5px 0 40px rgba(0,0,0,0.06);
@@ -79,6 +74,20 @@
         border-right: 1px solid rgba(255,255,255,0.5);
     }
     #sidebar.active { transform: translateX(0); }
+
+    /* --- 手机端适配：侧边栏宽度调整 --- */
+    @media (max-width: 480px) {
+        #sidebar {
+            width: 85%; /* 手机上不要占满，留一点缝隙点击地图关闭 */
+            max-width: 350px; 
+        }
+        .menu-btn {
+            top: 15px; left: 15px; /* 稍微紧凑一点 */
+        }
+        .leaflet-control-geocoder {
+            top: 15px !important; right: 15px !important;
+        }
+    }
 
     .sidebar-header { padding: 45px 30px 20px; }
     .sidebar-header h1 {
@@ -98,7 +107,7 @@
         border-radius: var(--radius);
         box-shadow: var(--shadow-soft);
         display: flex; justify-content: space-between; align-items: center;
-        border: 1px solid rgba(136, 158, 175, 0.1); /* 极淡的蓝色边框 */
+        border: 1px solid rgba(136, 158, 175, 0.1); 
     }
     .stat-text { display: flex; flex-direction: column; }
     .stat-label { 
@@ -112,6 +121,7 @@
     .trip-list { 
         flex: 1; overflow-y: auto; padding: 0 30px 20px; 
         scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch; /* 手机端滚动更顺滑 */
     }
     .trip-list::-webkit-scrollbar { width: 4px; }
     .trip-list::-webkit-scrollbar-thumb { background: #D0D6DA; border-radius: 10px; }
@@ -132,7 +142,11 @@
     .trip-card:hover { 
         transform: translateY(-3px); 
         box-shadow: var(--shadow-soft); 
-        border-color: var(--c-blue); /* 悬停变为蓝色边框 */
+        border-color: var(--c-blue); 
+    }
+    /* 手机端点击不产生 hover 位移，避免误触感 */
+    @media (hover: none) {
+        .trip-card:hover { transform: none; }
     }
 
     .card-img-wrapper {
@@ -149,14 +163,13 @@
         font-size: 17px; color: var(--text-main); margin-bottom: 4px; 
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    /* 日期使用蓝色 */
     .card-info .date { font-size: 12px; color: var(--c-blue); font-weight: 600; font-family: 'Nunito', sans-serif;}
     .card-info p { 
         font-size: 13px; color: var(--text-sub); margin-top: 3px;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
     }
 
-    /* 删除按钮 */
+    /* 删除按钮 - 手机端直接显示，或者通过长按(复杂)，这里简化为一直可见但颜色淡 */
     .btn-delete-card {
         position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
         width: 30px; height: 30px; border-radius: 50%;
@@ -164,10 +177,16 @@
         display: none; align-items: center; justify-content: center;
         font-size: 13px; opacity: 0.9; box-shadow: 0 4px 10px rgba(214, 188, 192, 0.4);
     }
+    /* PC端Hover显示 */
     .trip-card:hover .btn-delete-card { display: flex; }
-    .btn-delete-card:hover { opacity: 1; transform: translateY(-50%) scale(1.1); }
+    
+    /* 手机端优化：媒体查询如果不支持hover，则总是显示删除按钮，但透明度低一点 */
+    @media (hover: none) {
+        .btn-delete-card { display: flex; opacity: 0.6; }
+    }
+    .btn-delete-card:active { opacity: 1; transform: translateY(-50%) scale(0.95); }
 
-    /* --- 6. 右上角搜索框 (莫兰蒂蓝风格) --- */
+    /* --- 6. 右上角搜索框 --- */
     .leaflet-control-geocoder {
         position: absolute; top: 25px; right: 25px;
         background: #FFF;
@@ -177,13 +196,12 @@
         padding: 6px 14px;
         display: flex; align-items: center;
         transition: all 0.3s;
+        z-index: 1000;
     }
-    /* 悬停时显示蓝色边框 */
     .leaflet-control-geocoder:hover { border-color: var(--c-blue) !important; }
 
     .leaflet-control-geocoder-icon {
         width: 32px; height: 32px;
-        /* 核心修改：改为蓝色背景 */
         background: var(--c-blue) !important; 
         border-radius: 50%;
         display: flex; justify-content: center; align-items: center;
@@ -197,9 +215,16 @@
         font-size: 14px; color: var(--text-main); font-family: inherit;
         background: transparent; border: none; outline: none; width: 150px;
     }
+    /* 手机上搜索框宽度自适应 */
+    @media (max-width: 480px) {
+        .leaflet-control-geocoder-form input { width: 100px; }
+    }
+
     .leaflet-control-geocoder-alternatives { 
         margin-top: 12px; border-radius: 12px; border: none; 
         box-shadow: 0 10px 30px rgba(94, 115, 130, 0.15); 
+        width: 260px; /* 防止搜索结果太宽 */
+        max-width: 80vw;
     }
 
     /* --- 7. 弹窗样式 --- */
@@ -207,9 +232,11 @@
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(94, 115, 130, 0.3); backdrop-filter: blur(5px);
         z-index: 3000; justify-content: center; align-items: center;
+        padding: 20px; /* 增加padding防止贴边 */
     }
     .modal-card {
-        background: #FFF; width: 360px; border-radius: 20px; padding: 35px;
+        background: #FFF; width: 100%; max-width: 360px; /* 适配手机宽度 */
+        border-radius: 20px; padding: 30px;
         box-shadow: 0 20px 50px rgba(0,0,0,0.15);
     }
     .modal-card h2 { text-align: center; color: var(--c-blue-dark); margin-bottom: 25px; font-size: 22px; letter-spacing: 1px;}
@@ -220,13 +247,14 @@
         background: #F4F6F8; border: 1px solid #E1E6EA;
         font-family: inherit; font-size: 14px; outline: none; color: var(--text-main);
         transition: border-color 0.3s;
+        /* 防止iOS输入框放大 */
+        font-size: 16px; 
     }
     .input-wrapper input:focus, .input-wrapper textarea:focus { border-color: var(--c-blue); background: #FFF; }
     
     .modal-btns { display: flex; gap: 15px; margin-top: 30px; }
     .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.2s;}
     
-    /* 蓝色提交按钮 */
     .btn-submit { background: var(--c-blue); color: #FFF; box-shadow: 0 4px 12px rgba(136, 158, 175, 0.4); }
     .btn-submit:hover { background: var(--c-blue-dark); transform: translateY(-2px); }
     
@@ -242,7 +270,6 @@
     .popup-text span { color: var(--c-blue); font-size: 12px; font-weight: bold; }
     .popup-text p { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.5; }
     
-    /* 去掉popup默认的关闭按钮背景 */
     .leaflet-popup-close-button {
         color: #FFF !important; top: 10px !important; right: 10px !important;
         text-shadow: 0 1px 3px rgba(0,0,0,0.5); font-size: 16px !important;
@@ -263,7 +290,6 @@
         <p>TRAVEL MEMORIES</p>
     </div>
     
-    <!-- 经典的 Locations 统计卡片 -->
     <div class="stats-card">
         <div class="stat-text">
             <span class="stat-label">LOCATIONS</span>
@@ -301,12 +327,18 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    // --- 1. 地图初始化 (标准 OSM 地图) ---
-    const map = L.map('map', { zoomControl: false }).setView([35, 105], 4);
+    // --- 1. 地图初始化 ---
+    const map = L.map('map', { 
+        zoomControl: false,
+        attributionControl: false // 手机上隐藏版权信息节省空间，或者保留
+    }).setView([35, 105], 4);
     
+    // --- 关键修改：detectRetina: true ---
+    // 这个属性会让Leaflet在高清屏手机上自动适配分辨率，解决糊的问题
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
+        attribution: '&copy; OpenStreetMap',
+        detectRetina: true // <--- 重点！修复模糊的核心代码
     }).addTo(map);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -325,15 +357,27 @@
     let tempLatLng = null;
     let currentImgBase64 = null;
 
-    // 自定义图标 (SVG)
+    // 自定义图标 (SVG) - 确保你本地有这个文件，或者换成在线URL
     const myIcon = L.icon({
-        iconUrl: 'location2.svg',
+        iconUrl: 'location2.svg', // 如果手机上不显示，检查路径是否正确，或改用CDN图片
         iconSize: [36, 36],
         iconAnchor: [18, 36],
         popupAnchor: [0, -36]
     });
+    
+    // 如果没有 location2.svg，使用默认Fallback
+    map.on('tileerror', function(error, tile) {
+        console.log("Tile error", error);
+    });
 
     map.on('click', (e) => {
+        // 如果侧边栏打开，点击地图先关闭侧边栏，而不是添加点
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar.classList.contains('active')) {
+            toggleSidebar();
+            return;
+        }
+
         tempLatLng = e.latlng;
         document.getElementById('addModal').style.display = 'flex';
         // 重置
@@ -373,8 +417,8 @@
         renderList();
         closeModal();
         
-        const sidebar = document.getElementById('sidebar');
-        if(!sidebar.classList.contains('active')) toggleSidebar();
+        // 保存后如果想看列表，可以自动打开侧边栏，或者保持关闭
+        // toggleSidebar(); 
     }
 
     function renderMarker(trip) {
@@ -420,6 +464,10 @@
             card.onclick = (e) => {
                 if(!e.target.closest('.btn-delete-card')) {
                     map.flyTo([trip.lat, trip.lng], 13);
+                    // 手机端点击列表跳转后，自动关闭侧边栏以便看地图
+                    if(window.innerWidth < 480) {
+                        toggleSidebar();
+                    }
                 }
             };
             list.appendChild(card);
