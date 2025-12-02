@@ -2,9 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 强制禁止用户缩放页面，只能缩放地图 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>旅行足迹 - 莫兰蒂蓝版</title>
+    <title>旅行足迹 - 中文极速版</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
@@ -33,10 +32,11 @@
         height: 100vh; width: 100vw; overflow: hidden; 
         color: var(--text-main);
         background: var(--bg-color);
-        overscroll-behavior: none; /* 禁止iOS回弹 */
+        overscroll-behavior: none; 
     }
 
-    #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #F4F6F8; }
+    /* 地图背景微调，配合高德的底色 */
+    #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #FCFCFC; }
 
     /* --- 2. 按钮与控件 --- */
     .menu-btn {
@@ -46,18 +46,16 @@
         box-shadow: var(--shadow-soft);
         display: flex; justify-content: center; align-items: center;
         font-size: 18px; color: var(--c-blue-dark); 
-        cursor: pointer; transition: 0.3s;
-        border: 1px solid #F0F0F0;
+        cursor: pointer; transition: 0.3s; border: 1px solid #F0F0F0;
     }
-    .menu-btn:hover, .menu-btn:active { background: var(--c-blue); color: #FFF; }
+    .menu-btn:hover { background: var(--c-blue); color: #FFF; }
 
-    /* --- 3. 侧边栏 (移动端优化版) --- */
+    /* --- 3. 侧边栏 --- */
     #sidebar {
         position: absolute; top: 0; left: 0; 
-        width: 400px; max-width: 85vw; /* 关键：手机上宽度自适应 */
+        width: 400px; max-width: 85vw;
         height: 100%;
-        background: rgba(252, 253, 254, 0.96); 
-        backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+        background: rgba(252, 253, 254, 0.98); /* 稍微不透明一点，遮挡高德地图的杂乱 */
         box-shadow: 5px 0 40px rgba(0,0,0,0.06);
         z-index: 1500;
         transform: translateX(-105%); 
@@ -82,10 +80,7 @@
     .stat-number { font-size: 28px; font-weight: 700; color: var(--c-blue-dark); line-height: 1; }
     .stat-icon { font-size: 24px; color: var(--c-grey); }
 
-    .trip-list { 
-        flex: 1; overflow-y: auto; padding: 0 25px 30px; 
-        -webkit-overflow-scrolling: touch;
-    }
+    .trip-list { flex: 1; overflow-y: auto; padding: 0 25px 30px; -webkit-overflow-scrolling: touch; }
 
     .trip-card {
         display: flex; align-items: center;
@@ -115,7 +110,7 @@
         background: var(--c-dusty-pink); color: #FFF;
         display: flex; align-items: center; justify-content: center;
         font-size: 12px; box-shadow: 0 2px 8px rgba(214, 188, 192, 0.4);
-        opacity: 0.8; /* 手机上常驻显示，但淡一点 */
+        opacity: 0.8;
     }
 
     /* --- 4. 搜索框 --- */
@@ -132,11 +127,12 @@
     .leaflet-control-geocoder-form input {
         font-size: 14px; width: 120px; padding-left: 10px; border: none; outline: none; background: transparent;
     }
-    /* 手机适配：搜索框自动变窄 */
     @media (max-width: 400px) {
-        .leaflet-control-geocoder-form input { width: 90px; transition: width 0.3s;}
-        .leaflet-control-geocoder-form input:focus { width: 140px; }
+        .leaflet-control-geocoder-form input { width: 90px; }
     }
+    
+    /* 搜索结果样式修复 */
+    .leaflet-control-geocoder-alternatives { width: 260px; max-width: 80vw; }
 
     /* --- 5. 弹窗 --- */
     .modal-overlay {
@@ -151,7 +147,6 @@
     @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
     .input-wrapper { margin-bottom: 15px; }
-    /* 字体设置16px防止iOS输入缩放 */
     .input-wrapper input, .input-wrapper textarea {
         width: 100%; padding: 12px; border-radius: 10px;
         background: #F4F6F8; border: 1px solid #E1E6EA;
@@ -162,7 +157,7 @@
     .btn-submit { background: var(--c-blue); color: #FFF; }
     .btn-cancel { background: #EEF1F3; color: #889EAF; }
 
-    /* Leaflet Popup 图片修复 */
+    /* Leaflet Popup 修复 */
     .leaflet-popup-content { margin: 0; width: 240px !important; }
     .popup-img { width: 100%; height: 120px; object-fit: cover; display: block;}
     .popup-text { padding: 15px; }
@@ -194,7 +189,7 @@
 <div class="modal-overlay" id="addModal">
     <div class="modal-card">
         <h2 style="text-align:center; color:var(--c-blue-dark); margin-bottom:20px;">记录新旅程</h2>
-        <div class="input-wrapper"><input type="text" id="locName" placeholder="地点名称"></div>
+        <div class="input-wrapper"><input type="text" id="locName" placeholder="地点名称 (如: 北京故宫)"></div>
         <div class="input-wrapper"><input type="date" id="locDate"></div>
         <div class="input-wrapper"><input type="file" id="locImg" accept="image/*"></div>
         <div class="input-wrapper"><textarea id="locNote" rows="3" placeholder="写点备注..."></textarea></div>
@@ -209,30 +204,42 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    // --- 1. 地图初始化 ---
-    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([35, 105], 4);
+    // --- 1. 地图初始化 (重心调整为中国) ---
+    // maxBounds: 限制用户只能在中国及周边区域拖动，避免迷路
+    const chinaBounds = [
+        [3, 73],   // 西南角
+        [54, 136]  // 东北角
+    ];
+
+    const map = L.map('map', { 
+        zoomControl: false, 
+        attributionControl: false,
+        maxBounds: chinaBounds, // 限制范围
+        maxBoundsViscosity: 1.0, // 拖动边缘时的阻力
+        minZoom: 4 // 最小缩放，防止看到太多空白
+    }).setView([35, 105], 4);
     
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     // ==========================================
-    // 核心修改：使用 CartoDB Voyager 底图 (支持Retina)
+    // 核心修改：使用高德地图 (AutoNavi)
     // ==========================================
-    // {r} 是关键参数，如果是高清屏，它会自动请求 @2x 的高清瓦片
-    // 这种底图是矢量渲染的栅格，非常清晰，而且颜色是莫兰蒂色系
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20, // 允许更深层级的缩放
-        detectRetina: true // 双重保险
+    // 优势：中文、国内极速、细节丰富
+    // detectRetina: true -> 解决手机模糊问题
+    L.tileLayer('https://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+        subdomains: ["01", "02", "03", "04"],
+        maxZoom: 18,
+        detectRetina: true // 开启手机高清适配
     }).addTo(map);
 
     // --- 2. 搜索 ---
     L.Control.geocoder({
         defaultMarkGeocode: false,
         position: 'topright',
-        placeholder: '搜索...',
+        placeholder: '搜地点...',
     }).on('markgeocode', function(e) {
-        map.flyTo(e.geocode.center, 13);
+        // 高德地图坐标系有轻微偏移，但对于记录旅行足迹影响不大，直接跳转
+        map.flyTo(e.geocode.center, 14);
     }).addTo(map);
 
     // --- 3. 逻辑功能 ---
@@ -241,19 +248,18 @@
     let currentImgBase64 = null;
 
     const myIcon = L.icon({
-        iconUrl: 'location2.svg', // 确保这个文件存在
+        iconUrl: 'location2.svg', 
         iconSize: [36, 36],
         iconAnchor: [18, 36],
         popupAnchor: [0, -32]
     });
 
-    // 默认回退图标，防止svg不存在时地图报错
     map.on('tileerror', (e) => console.log('Tile error:', e));
 
     map.on('click', (e) => {
         const sidebar = document.getElementById('sidebar');
         if (sidebar.classList.contains('active')) {
-            toggleSidebar(); // 只是关闭菜单
+            toggleSidebar();
         } else {
             tempLatLng = e.latlng;
             openModal();
@@ -263,10 +269,8 @@
     function openModal() {
         const m = document.getElementById('addModal');
         m.style.display = 'flex';
-        // 自动设置日期为今天
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('locDate').value = today;
-        
         document.getElementById('locName').value = '';
         document.getElementById('locImg').value = '';
         document.getElementById('locNote').value = '';
@@ -345,7 +349,7 @@
             
             card.onclick = (e) => {
                 if(!e.target.closest('.btn-delete-card')) {
-                    map.flyTo([trip.lat, trip.lng], 14); // 缩放稍微大一点
+                    map.flyTo([trip.lat, trip.lng], 15); // 国内地图细节丰富，可以放大到15级
                     if(window.innerWidth < 480) toggleSidebar();
                 }
             };
