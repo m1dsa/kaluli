@@ -2,75 +2,452 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="一个互动式旅行地图,让用户可以标记他们去过或想去的地方。">
-    <meta name="keywords" content="旅行地图,互动地图,旅行计划,地理标记">
-    <title>旅行足迹</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
-        #map {
-            height: 100vh;
-            width: 100%;
-        }
-        h1 {
-            position: absolute;
-            top: 10px;
-            left: 50px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 1.5em;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>旅行足迹 - 莫兰蒂蓝版</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    /* --- 1. 莫兰蒂蓝配色方案 (Morandi Blue Palette) --- */
+    :root {
+        /* 背景色：极淡的冷灰白，比暖白更适合蓝色系 */
+        --bg-color: #F4F6F8;
+        
+        /* 核心莫兰蒂蓝 */
+        --c-blue: #889EAF;      /* 雾霾蓝 (主色调：图标、按钮) */
+        --c-blue-dark: #5E7382; /* 深岩蓝 (标题、重点文字) */
+        --c-grey: #DEE2E6;      /* 浅冷灰 (装饰、边框) */
+        --c-dusty-pink: #D6BCC0;/* 枯粉色 (保留作为删除/强调色，红蓝搭配很好看) */
+        
+        /* 文字颜色 */
+        --text-main: #4F5D66;   /* 深蓝灰 */
+        --text-sub: #949EA3;    /* 浅灰 */
+        
+        /* 阴影 - 带一点蓝色的阴影 */
+        --shadow-soft: 0 5px 25px rgba(94, 115, 130, 0.12);
+        --radius: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        font-family: 'Zen Maru Gothic', sans-serif; 
+        height: 100vh; overflow: hidden; 
+        color: var(--text-main);
+        background: var(--bg-color);
+    }
+
+    /* 地图全屏 */
+    #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+    /* --- 2. 左上角汉堡按钮 (蓝色系) --- */
+    .menu-btn {
+        position: absolute; top: 25px; left: 25px; z-index: 2000;
+        width: 46px; height: 46px;
+        background: #FFF;
+        border-radius: 50%;
+        box-shadow: var(--shadow-soft);
+        display: flex; justify-content: center; align-items: center;
+        font-size: 18px; color: var(--c-blue-dark); 
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid #F0F0F0;
+    }
+    .menu-btn:hover { 
+        background: var(--c-blue); 
+        color: #FFF; 
+        border-color: var(--c-blue); 
+        transform: rotate(90deg); /* 增加一点微交互 */
+    }
+
+    /* --- 3. 侧边栏 (冷调磨砂) --- */
+    #sidebar {
+        position: absolute; top: 0; left: 0; 
+        width: 400px; height: 100%;
+        /* 背景改为带冷调的半透明白 */
+        background: rgba(248, 250, 251, 0.96); 
+        backdrop-filter: blur(12px);
+        box-shadow: 5px 0 40px rgba(0,0,0,0.06);
+        z-index: 1500;
+        transform: translateX(-105%); 
+        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        display: flex; flex-direction: column;
+        border-right: 1px solid rgba(255,255,255,0.5);
+    }
+    #sidebar.active { transform: translateX(0); }
+
+    .sidebar-header { padding: 45px 30px 20px; }
+    .sidebar-header h1 {
+        font-size: 32px; font-weight: 700; color: var(--c-blue-dark);
+        letter-spacing: 1px; margin-bottom: 5px;
+    }
+    .sidebar-header p {
+        font-family: 'Playfair Display', serif;
+        font-style: italic; color: var(--c-blue); font-size: 15px;
+    }
+
+    /* --- 4. 统计卡片 --- */
+    .stats-card {
+        margin: 15px 30px 25px;
+        padding: 20px 25px;
+        background: #FFF;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-soft);
+        display: flex; justify-content: space-between; align-items: center;
+        border: 1px solid rgba(136, 158, 175, 0.1); /* 极淡的蓝色边框 */
+    }
+    .stat-text { display: flex; flex-direction: column; }
+    .stat-label { 
+        font-size: 11px; font-weight: 700; color: var(--c-blue); 
+        letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px;
+    }
+    .stat-number { font-size: 30px; font-weight: 700; color: var(--c-blue-dark); line-height: 1; }
+    .stat-icon { font-size: 28px; color: var(--c-grey); }
+
+    /* 列表区域 */
+    .trip-list { 
+        flex: 1; overflow-y: auto; padding: 0 30px 20px; 
+        scrollbar-width: thin;
+    }
+    .trip-list::-webkit-scrollbar { width: 4px; }
+    .trip-list::-webkit-scrollbar-thumb { background: #D0D6DA; border-radius: 10px; }
+
+    /* --- 5. 紧凑型卡片 --- */
+    .trip-card {
+        display: flex; align-items: center;
+        background: #FFF;
+        border-radius: var(--radius);
+        padding: 12px; margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        height: 96px;
+        position: relative; overflow: hidden;
+        cursor: pointer;
+    }
+    .trip-card:hover { 
+        transform: translateY(-3px); 
+        box-shadow: var(--shadow-soft); 
+        border-color: var(--c-blue); /* 悬停变为蓝色边框 */
+    }
+
+    .card-img-wrapper {
+        width: 72px; height: 72px; flex-shrink: 0;
+        border-radius: 10px; overflow: hidden;
+        margin-right: 15px; background: #F4F6F8;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .card-img { width: 100%; height: 100%; object-fit: cover; }
+    .card-placeholder { color: #CBD2D6; font-size: 24px; }
+
+    .card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+    .card-info h3 { 
+        font-size: 17px; color: var(--text-main); margin-bottom: 4px; 
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* 日期使用蓝色 */
+    .card-info .date { font-size: 12px; color: var(--c-blue); font-weight: 600; font-family: 'Nunito', sans-serif;}
+    .card-info p { 
+        font-size: 13px; color: var(--text-sub); margin-top: 3px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+    }
+
+    /* 删除按钮 */
+    .btn-delete-card {
+        position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+        width: 30px; height: 30px; border-radius: 50%;
+        background: var(--c-dusty-pink); color: #FFF;
+        display: none; align-items: center; justify-content: center;
+        font-size: 13px; opacity: 0.9; box-shadow: 0 4px 10px rgba(214, 188, 192, 0.4);
+    }
+    .trip-card:hover .btn-delete-card { display: flex; }
+    .btn-delete-card:hover { opacity: 1; transform: translateY(-50%) scale(1.1); }
+
+    /* --- 6. 右上角搜索框 (莫兰蒂蓝风格) --- */
+    .leaflet-control-geocoder {
+        position: absolute; top: 25px; right: 25px;
+        background: #FFF;
+        border-radius: 50px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid transparent !important;
+        padding: 6px 14px;
+        display: flex; align-items: center;
+        transition: all 0.3s;
+    }
+    /* 悬停时显示蓝色边框 */
+    .leaflet-control-geocoder:hover { border-color: var(--c-blue) !important; }
+
+    .leaflet-control-geocoder-icon {
+        width: 32px; height: 32px;
+        /* 核心修改：改为蓝色背景 */
+        background: var(--c-blue) !important; 
+        border-radius: 50%;
+        display: flex; justify-content: center; align-items: center;
+        color: #FFF; margin-right: 10px;
+        transition: background 0.3s;
+    }
+    .leaflet-control-geocoder-icon:hover { background: var(--c-blue-dark) !important; }
+    
+    .leaflet-control-geocoder-icon::after { content: "\f002"; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 14px;}
+    .leaflet-control-geocoder-form input {
+        font-size: 14px; color: var(--text-main); font-family: inherit;
+        background: transparent; border: none; outline: none; width: 150px;
+    }
+    .leaflet-control-geocoder-alternatives { 
+        margin-top: 12px; border-radius: 12px; border: none; 
+        box-shadow: 0 10px 30px rgba(94, 115, 130, 0.15); 
+    }
+
+    /* --- 7. 弹窗样式 --- */
+    .modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(94, 115, 130, 0.3); backdrop-filter: blur(5px);
+        z-index: 3000; justify-content: center; align-items: center;
+    }
+    .modal-card {
+        background: #FFF; width: 360px; border-radius: 20px; padding: 35px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    }
+    .modal-card h2 { text-align: center; color: var(--c-blue-dark); margin-bottom: 25px; font-size: 22px; letter-spacing: 1px;}
+    
+    .input-wrapper { margin-bottom: 20px; }
+    .input-wrapper input, .input-wrapper textarea {
+        width: 100%; padding: 12px 15px; border-radius: 10px;
+        background: #F4F6F8; border: 1px solid #E1E6EA;
+        font-family: inherit; font-size: 14px; outline: none; color: var(--text-main);
+        transition: border-color 0.3s;
+    }
+    .input-wrapper input:focus, .input-wrapper textarea:focus { border-color: var(--c-blue); background: #FFF; }
+    
+    .modal-btns { display: flex; gap: 15px; margin-top: 30px; }
+    .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.2s;}
+    
+    /* 蓝色提交按钮 */
+    .btn-submit { background: var(--c-blue); color: #FFF; box-shadow: 0 4px 12px rgba(136, 158, 175, 0.4); }
+    .btn-submit:hover { background: var(--c-blue-dark); transform: translateY(-2px); }
+    
+    .btn-cancel { background: #EEF1F3; color: #889EAF; }
+    .btn-cancel:hover { background: #E1E6EA; }
+
+    /* Leaflet Popup */
+    .leaflet-popup-content-wrapper { border-radius: 12px; box-shadow: var(--shadow-soft); overflow: hidden;}
+    .leaflet-popup-content { margin: 0; width: 250px !important; }
+    .popup-img { width: 100%; height: 130px; object-fit: cover; }
+    .popup-text { padding: 18px; }
+    .popup-text h3 { font-size: 17px; margin-bottom: 5px; color: var(--c-blue-dark); }
+    .popup-text span { color: var(--c-blue); font-size: 12px; font-weight: bold; }
+    .popup-text p { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.5; }
+    
+    /* 去掉popup默认的关闭按钮背景 */
+    .leaflet-popup-close-button {
+        color: #FFF !important; top: 10px !important; right: 10px !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5); font-size: 16px !important;
+    }
+</style>
 </head>
 <body>
-    <h1>旅行足迹</h1>
-    <main id="map" aria-label="互动式旅行地图"></main>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        // JavaScript代码保持不变
-        // 初始化地图并设置默认视图
-        var map = L.map('map').setView([20, 0], 2);  // 初始位置设为全球视图
+<!-- 汉堡按钮 -->
+<div class="menu-btn" onclick="toggleSidebar()">
+    <i class="fa-solid fa-bars"></i>
+</div>
 
-        // 加载地图图层
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+<!-- 侧边栏 -->
+<div id="sidebar">
+    <div class="sidebar-header">
+        <h1>旅行足迹</h1>
+        <p>TRAVEL MEMORIES</p>
+    </div>
+    
+    <!-- 经典的 Locations 统计卡片 -->
+    <div class="stats-card">
+        <div class="stat-text">
+            <span class="stat-label">LOCATIONS</span>
+            <strong class="stat-number" id="totalCount">0</strong>
+        </div>
+        <div class="stat-icon">
+            <i class="fa-solid fa-map-location-dot"></i>
+        </div>
+    </div>
+    
+    <div class="trip-list" id="tripList">
+        <!-- 卡片列表 -->
+    </div>
+</div>
 
-        // 自定义图标样式
-        var markerIcon = L.icon({
-            iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
-            shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
+<!-- 地图 -->
+<div id="map"></div>
+
+<!-- 录入弹窗 -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-card">
+        <h2>记录新旅程</h2>
+        <div class="input-wrapper"><input type="text" id="locName" placeholder="地点名称"></div>
+        <div class="input-wrapper"><input type="date" id="locDate"></div>
+        <div class="input-wrapper"><input type="file" id="locImg" accept="image/*"></div>
+        <div class="input-wrapper"><textarea id="locNote" rows="3" placeholder="写点备注..."></textarea></div>
+        <div class="modal-btns">
+            <button class="btn btn-cancel" onclick="closeModal()">取消</button>
+            <button class="btn btn-submit" onclick="saveLocation()">保存记录</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+    // --- 1. 地图初始化 (标准 OSM 地图) ---
+    const map = L.map('map', { zoomControl: false }).setView([35, 105], 4);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // --- 2. 搜索功能 ---
+    L.Control.geocoder({
+        defaultMarkGeocode: false,
+        position: 'topright',
+        placeholder: '搜索城市...',
+    }).on('markgeocode', function(e) {
+        map.flyTo(e.geocode.center, 13);
+    }).addTo(map);
+
+    // --- 3. 逻辑处理 ---
+    let footprints = JSON.parse(localStorage.getItem('localMapFootprints')) || [];
+    let tempLatLng = null;
+    let currentImgBase64 = null;
+
+    // 自定义图标 (SVG)
+    const myIcon = L.icon({
+        iconUrl: 'location2.svg',
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -36]
+    });
+
+    map.on('click', (e) => {
+        tempLatLng = e.latlng;
+        document.getElementById('addModal').style.display = 'flex';
+        // 重置
+        document.getElementById('locName').value = '';
+        document.getElementById('locDate').valueAsDate = new Date();
+        document.getElementById('locImg').value = '';
+        document.getElementById('locNote').value = '';
+        currentImgBase64 = null;
+    });
+
+    document.getElementById('locImg').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => currentImgBase64 = evt.target.result;
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function saveLocation() {
+        const name = document.getElementById('locName').value;
+        if(!name) return alert('请填写地点');
+
+        const newTrip = {
+            id: Date.now(),
+            lat: tempLatLng.lat,
+            lng: tempLatLng.lng,
+            name: name,
+            date: document.getElementById('locDate').value,
+            note: document.getElementById('locNote').value,
+            image: currentImgBase64
+        };
+
+        footprints.push(newTrip);
+        updateStorage();
+        renderMarker(newTrip);
+        renderList();
+        closeModal();
+        
+        const sidebar = document.getElementById('sidebar');
+        if(!sidebar.classList.contains('active')) toggleSidebar();
+    }
+
+    function renderMarker(trip) {
+        const marker = L.marker([trip.lat, trip.lng], { icon: myIcon }).addTo(map);
+        const imgHtml = trip.image ? `<img src="${trip.image}" class="popup-img">` : '';
+        marker.bindPopup(`
+            <div style="width:100%; padding:0;">
+                ${imgHtml}
+                <div class="popup-text">
+                    <h3>${trip.name}</h3>
+                    <span>${trip.date}</span>
+                    <p>${trip.note || ''}</p>
+                </div>
+            </div>
+        `);
+    }
+
+    function renderList() {
+        const list = document.getElementById('tripList');
+        document.getElementById('totalCount').innerText = footprints.length;
+        list.innerHTML = '';
+
+        footprints.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(trip => {
+            const card = document.createElement('div');
+            card.className = 'trip-card';
+            
+            const imgHtml = trip.image 
+                ? `<img src="${trip.image}" class="card-img">` 
+                : `<i class="fa-solid fa-image card-placeholder"></i>`;
+
+            card.innerHTML = `
+                <div class="card-img-wrapper">${imgHtml}</div>
+                <div class="card-info">
+                    <h3>${trip.name}</h3>
+                    <span class="date">${trip.date}</span>
+                    <p>${trip.note || ''}</p>
+                </div>
+                <div class="btn-delete-card" onclick="deleteTrip(${trip.id}, event)">
+                    <i class="fa-solid fa-trash"></i>
+                </div>
+            `;
+            
+            card.onclick = (e) => {
+                if(!e.target.closest('.btn-delete-card')) {
+                    map.flyTo([trip.lat, trip.lng], 13);
+                }
+            };
+            list.appendChild(card);
         });
+    }
 
-        // 保存所有标记
-        var markers = [];
+    function deleteTrip(id, e) {
+        e.stopPropagation();
+        if(confirm('确定删除吗？')) {
+            footprints = footprints.filter(t => t.id !== id);
+            updateStorage();
+            location.reload();
+        }
+    }
 
-        // 地图点击事件
-        map.on('click', function(e) {
-            var latlng = e.latlng;
-            var marker = L.marker(latlng, { icon: markerIcon }).addTo(map);
+    function updateStorage() { localStorage.setItem('localMapFootprints', JSON.stringify(footprints)); }
+    function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+    function toggleSidebar() { 
+        document.getElementById('sidebar').classList.toggle('active'); 
+        const icon = document.querySelector('.menu-btn i');
+        if(document.getElementById('sidebar').classList.contains('active')){
+            icon.classList.replace('fa-bars', 'fa-xmark');
+        } else {
+            icon.classList.replace('fa-xmark', 'fa-bars');
+        }
+    }
 
-            marker.on('click', function() {
-                // 点击标记时移除标记
-                map.removeLayer(marker);
-                markers = markers.filter(m => m !== marker); // 更新标记列表
-            });
-
-            markers.push(marker);  // 保存标记
-        });
-    </script>
+    (function init() { footprints.forEach(renderMarker); renderList(); })();
+</script>
 </body>
 </html>
